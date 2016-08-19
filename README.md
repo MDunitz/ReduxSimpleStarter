@@ -23,3 +23,15 @@ Click [here](https://github.com/StephenGrider/ReactStarter/releases) then downlo
 	> npm install
 	> npm start
 ```
+
+
+-create Database (from command line)
+```
+createdb biobot
+```
+-Load Schema (from command line)
+```
+psql biobot < SQL_server/schema.sql
+```
+
+-Load Data
