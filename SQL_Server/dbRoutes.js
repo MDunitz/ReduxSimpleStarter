@@ -3,6 +3,8 @@
 var dbController = require('/dbController');
 
 module.exports = function(router) {
+  //add database info
+  router.post('/api/dbInfo', dbController.dataPost);
   //sort by user
   router.get('api/byUser/1', dbController.byUserGetOne);
   router.get('api/byUser/all', dbController.byUserGetALL);

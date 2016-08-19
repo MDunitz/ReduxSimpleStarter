@@ -2,8 +2,48 @@ const connectionString = 'postgres://@localhost:5432/bioBots';
 const pg = require('pg');
 //TODO check options for pgp
 const pgp = require('pg-promise')(/*/options*/);
-
+const db = pgp(connectionString)
 module.exports = {
+  dataPost: function(req, res){
+    //grab data from request
+    var data = {
+      email: req.body.user_info.email,
+      serial: req.body.user_info.serial,
+      clDuration: req.body.print_info.clDuration,
+      clEnabled: req.body.print_info.clEnabled,
+      clIntensity: req.body.print_info.clIntensity,
+      input: req.body.print_info.input,
+      output: req.body.print_info.output,
+      extruder1: req.body.print_info.extruder1,
+      extruder2: req.body.print_info.extruder2,
+      layerHeight: req.body.printInfo.layerHeight,
+      layerNum: req.body.print_info.layerNum,
+      wellplateType: req.body.print_info.wellplate,
+      deadPercent: req.body.print_data.deadPercent,
+      elasticity: req.body.print_data.elasticity,
+      livePercent: req.body.print_data.livePercent
+    }
+    db.tx(function(t){
+      return t.oneOrNone('SELECT id FROM users WHERE serial=${serial}', data)
+      .then(function(userID){
+        return userID || t.one('INSERT INTO users(email, serial) values(${email}, ${serial} RETURNING id', data)
+      });
+    })
+    .then(function(userID){
+      return t.one('INSERT INTO printInfo(inputFile, outputFile, extruder1, extruder2, clEnabled, clDuration, clIntensity, layerNum, layerHeight, wellplateType,  userID) values (${inputFile}, ${outputFile}, ${extruder1}, ${extruder2}, ${clEnabled}, ${clDuration}, ${clIntensity}, ${layerNum}, ${layerHeight}, ${wellplateType},  userID) RETURNING id', data)
+    })
+    .then(function(printID){
+      return t.one('INSERT INTO printData(deadPercent, elasticity, livePercent, printID) values(${deadPercent}, ${elasticity}, ${livePercent}, printID) RETURNING id', data)
+    })
+    .then(function(printDataID){
+      res.sendStatus(200)
+    })
+    .catch(function(err){
+      console.log('err psoting to the db', err);
+      res.send(err)
+    })
+  },
+  
   byUserGetOne: function(req, res){
     var reqData ={
       userSerialNumber : req.body.userSerialNumber,
