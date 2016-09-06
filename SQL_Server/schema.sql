@@ -1,4 +1,6 @@
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS printInfo CASCADE;
+DROP TABLE IF EXISTS printData CASCADE;
 
 CREATE TABLE users(
   id SERIAL PRIMARY KEY,
@@ -6,7 +8,6 @@ CREATE TABLE users(
   serialNumber INTEGER UNIQUE
 );
 
-DROP TABLE IF EXISTS printInfo CASCADE;
 
 CREATE TABLE printInfo (
   id serial PRIMARY KEY,
@@ -25,7 +26,6 @@ CREATE TABLE printInfo (
   FOREIGN KEY(userID) REFERENCES users(id)
 );
 
-DROP TABLE IF EXISTS printData;
 
 CREATE TABLE printData(
   id serial PRIMARY KEY,

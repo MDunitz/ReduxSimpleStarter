@@ -1,10 +1,16 @@
-import axios from axios;
-import testData from './biobotsData/bioPrintData.json';
+import fs from "fs";
+import axios from 'axios';
 const ROOT_URL_DB = 'http://localhost:3000'
-function load(testData){
-  var myData = JSON.parse(testData);
-  for(var i=0; i<myData.length; i++){
-    var currSet = myData[i];
+var obj;
+fs.readFile('./biobotsData/practiceData', handleFile)
+
+function handleFile(err, data) {
+  if (err){
+    throw err;
+  }
+  obj=JSON.parse(data);
+  for(var i=0; i<data.length; i++){
+    var currSet = data[i];
     axios.post(`${ROOT_URL_DB}/api/dbInfo`, {
         user_info: {
             email: currSet.user_info.email,
@@ -32,5 +38,6 @@ function load(testData){
         console.log('whoo added print info: ', i, ' to sql db')
     });
   }
-}
+} 
+
 

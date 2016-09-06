@@ -1,4 +1,4 @@
-const connectionString = 'postgres://@localhost:5432/bioBots';
+const connectionString = 'postgres://@localhost:5432/biobots';
 const pg = require('pg');
 //TODO check options for pgp
 const pgp = require('pg-promise')(/*/options*/);
@@ -16,7 +16,7 @@ module.exports = {
       output: req.body.print_info.output,
       extruder1: req.body.print_info.extruder1,
       extruder2: req.body.print_info.extruder2,
-      layerHeight: req.body.printInfo.layerHeight,
+      layerHeight: req.body.print_info.layerHeight,
       layerNum: req.body.print_info.layerNum,
       wellplateType: req.body.print_info.wellplate,
       deadPercent: req.body.print_data.deadPercent,
@@ -24,24 +24,29 @@ module.exports = {
       livePercent: req.body.print_data.livePercent
     }
     db.tx(function(t){
-      return t.oneOrNone('SELECT id FROM users WHERE serial=${serial}', data)
+      return t.oneOrNone('SELECT id FROM users WHERE email=${email}', data)
       .then(function(userID){
-        return userID || t.one('INSERT INTO users(email, serial) values(${email}, ${serial} RETURNING id', data)
-      });
-    })
+        //console.log('made it to here', data, userID);
+        return userID || t.one('INSERT INTO users(email, serialnumber) values(${email}, ${serial}) RETURNING id', data)
+      })
     .then(function(userID){
-      return t.one('INSERT INTO printInfo(inputFile, outputFile, extruder1, extruder2, clEnabled, clDuration, clIntensity, layerNum, layerHeight, wellplateType,  userID) values (${inputFile}, ${outputFile}, ${extruder1}, ${extruder2}, ${clEnabled}, ${clDuration}, ${clIntensity}, ${layerNum}, ${layerHeight}, ${wellplateType},  userID) RETURNING id', data)
+      data.userid = userID.id;
+      //console.log('made it to here', userID);
+      return t.one('INSERT INTO printInfo(inputFile, outputFile, extruder1, extruder2, clEnabled, clDuration, clIntensity, layerNum, layerHeight, wellplateType, userID) values (${input}, ${output}, ${extruder1}, ${extruder2}, ${clEnabled}, ${clDuration}, ${clIntensity}, ${layerNum}, ${layerHeight}, ${wellplateType},  ${userid}) RETURNING id', data)
     })
     .then(function(printID){
-      return t.one('INSERT INTO printData(deadPercent, elasticity, livePercent, printID) values(${deadPercent}, ${elasticity}, ${livePercent}, printID) RETURNING id', data)
+      //console.log('livepercent', data.livePercent);
+      data.printid = printID.id;
+      return t.one('INSERT INTO printData(deadPercent, elasticity, livePercent, printID) values(${deadPercent}, ${elasticity}, ${livePercent}, ${printid}) RETURNING id', data)
     })
     .then(function(printDataID){
       res.sendStatus(200)
     })
     .catch(function(err){
-      console.log('err psoting to the db', err);
+      console.log('err posting to the db', err);
       res.send(err)
     })
+  })
   },
   
   byUserGetOne: function(req, res){
@@ -190,7 +195,8 @@ module.exports = {
     if(err){
       errRes(err);
 
-})    }
+    }
+  })
 
 },
 
@@ -198,4 +204,9 @@ module.exports = {
     done();
     console.log('err connecting to db', err);
     return res.status(500).json({success: false, data: err});
+  }
 }
+
+
+
+
